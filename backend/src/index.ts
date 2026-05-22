@@ -1,12 +1,23 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { testConnection } from "#/db/index";
+import { env } from "#/env";
 
 const app = new Hono();
 
-app.get("/", (c) => {
+app.use(
+  "/api/*",
+  cors({
+    origin: env.FRONTEND_URL,
+  }),
+);
+
+const routes = app.get("/", (c) => {
   return c.text("It's alright.");
 });
+
+export type AppType = typeof routes;
 
 serve(
   {

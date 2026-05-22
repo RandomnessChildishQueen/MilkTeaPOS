@@ -8,7 +8,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
-import { generate16DigitID } from "./generateID.js";
+import { generate16DigitID } from "./generateID";
 
 export const flavors = pgTable("flavors", {
   flavor_id: varchar({ length: 8 }).primaryKey(),

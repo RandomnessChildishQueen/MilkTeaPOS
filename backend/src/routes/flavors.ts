@@ -1,15 +1,19 @@
 import { Hono } from "hono";
 import { db } from "#/db/index";
-import {
-  flavors as flavorsTable,
-  drink_variants as variantsTable,
-} from "#/db/schema";
+import { flavorsTable, variantsTable } from "#/db/schema";
 import { eq, like, ilike } from "drizzle-orm";
 import { flavorService } from "#/services/flavorsServices";
 
 export const flavors = new Hono();
 
-//get all flavors
+//get all fields of flavors
+flavors.get("/", async (c) => {
+  const rows = await db.select().from(flavorsTable);
+
+  return c.json(rows);
+});
+
+//get all flavors with only the necessary columns
 flavors.get("/all", async (c) => {
   const rows = await flavorService.fetchFlavors();
   return c.json(rows);
@@ -19,9 +23,7 @@ flavors.get("/all", async (c) => {
 flavors.get("/search", async (c) => {
   const query = c.req.query("name") || "";
   const results = await db
-    .selectDistinct({
-      flavor_name: flavorsTable.flavor_name,
-    })
+    .select()
     .from(flavorsTable)
     .where(ilike(flavorsTable.flavor_name, `%${query}%`));
   return c.json(results);
@@ -58,7 +60,10 @@ flavors.post("/add", async (c) => {
     const body = await c.req.json();
     const created = await flavorService.createFlavor(body);
     return c.json(created, 201);
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message && err.message.includes("already exists")) {
+      return c.json({ error: err.message }, 400);
+    }
     return c.json({ error: "Failed to create flavor" }, 500);
   }
 });
@@ -106,27 +111,36 @@ flavors.put("/:id", async (c) => {
 //toggle flavor stock
 flavors.patch("/:id/stock", async (c) => {
   const flavor_id = c.req.param("id");
-  const { in_stock } = await c.req.json<{ in_stock: boolean }>();
+  const [row] = await db
+    .select({
+      in_stock: flavorsTable.in_stock,
+    })
+    .from(flavorsTable)
+    .where(eq(flavorsTable.flavor_id, flavor_id));
+
+  if (!row) {
+    return c.json({ error: "Flavor profile not found." }, 404);
+  }
+
+  const toggledStock = !row.in_stock;
+
   try {
     const updatedFlavorVariant = await db.transaction(async (tx) => {
       const [updatedFlavor] = await tx
         .update(flavorsTable)
-        .set({ in_stock })
+        .set({ in_stock: toggledStock })
         .where(eq(flavorsTable.flavor_id, flavor_id))
         .returning();
 
       const updatedVariants = await tx
         .update(variantsTable)
-        .set({ in_stock })
+        .set({ in_stock: toggledStock })
         .where(eq(variantsTable.flavor_id, flavor_id))
         .returning();
 
       return { updatedFlavor, updatedVariants };
     });
 
-    if (!updatedFlavorVariant) {
-      return c.json({ error: "Flavor profile not found." }, 404);
-    }
     return c.json(updatedFlavorVariant);
   } catch (err) {
     return c.json(
@@ -139,11 +153,27 @@ flavors.patch("/:id/stock", async (c) => {
 //set cup size out of stock
 flavors.patch("/sizes/:sizeName/stock", async (c) => {
   const sizeName = c.req.param("sizeName");
-  const { in_stock } = await c.req.json<{ in_stock: boolean }>();
+
+  const existingVariants = await db
+    .select({ in_stock: variantsTable.in_stock })
+    .from(variantsTable)
+    .where(eq(variantsTable.size, sizeName));
+
+  if (existingVariants.length === 0) {
+    return c.json(
+      { error: "No variations found matching the specified size name." },
+      404,
+    );
+  }
+
+  const isAnyVariantInStock = existingVariants.some(
+    (variant) => variant.in_stock,
+  );
+  const toggledStock = !isAnyVariantInStock;
 
   const updatedVariants = await db
     .update(variantsTable)
-    .set({ in_stock })
+    .set({ in_stock: toggledStock })
     .where(eq(variantsTable.size, sizeName))
     .returning();
 
@@ -153,8 +183,15 @@ flavors.patch("/sizes/:sizeName/stock", async (c) => {
       404,
     );
   }
-
-  return c.json(updatedVariants, 200);
+  return c.json(
+    {
+      message: `System-wide stock status for size '${sizeName}' updated successfully.`,
+      toggledTo: toggledStock,
+      updatedCount: updatedVariants.length,
+      variants: updatedVariants,
+    },
+    200,
+  );
 });
 
 //delete a flavor

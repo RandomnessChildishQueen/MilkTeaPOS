@@ -1,26 +1,26 @@
 import { db } from "#/db/index";
-import {
-  flavors as flavorsTable,
-  drink_variants as variantsTable,
-} from "#/db/schema";
+import { flavorsTable, variantsTable } from "#/db/schema";
 import { eq, like, ilike, asc, min } from "drizzle-orm";
+import { generateId } from "#/utils/generateId";
+import { removeVowel } from "#/utils/vowelRemover";
+import { skipLetterBy } from "#/utils/skipLetters";
 
-interface SizePriceInput {
+type SizePriceInput = {
   size: string;
   base_price: string;
-}
+};
 
-interface FlavorPriceInput {
+type FlavorPriceInput = {
   flavor_id: string;
   price: string;
-}
+};
 
-interface CreateFlavorInput {
+type CreateFlavorInput = {
   flavor_name: string;
   in_stock?: boolean;
   image_url: string;
   size_prices: SizePriceInput[];
-}
+};
 
 export const flavorService = {
   async fetchFlavors() {
@@ -45,6 +45,14 @@ export const flavorService = {
     return rows;
   },
 
+  async fetchVariantById(variant_id: string) {
+    const [variant] = await db
+      .select()
+      .from(variantsTable)
+      .where(eq(variantsTable.variant_id, variant_id));
+    return variant;
+  },
+
   async fetchSizes() {
     const sizes = await db
       .selectDistinct({
@@ -59,20 +67,70 @@ export const flavorService = {
       : ["Medium", "Large"];
   },
 
-  generateFlavorId(name: string) {
-    let flavorCode = "";
+  async generateFlavorId(base_name: string) {
+    const name = base_name ? base_name.trim() : "";
 
-    const nameWord = name.trim().split(/\s+/);
-
-    if (nameWord.length >= 2) {
-      flavorCode = nameWord
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase();
-    } else {
-      flavorCode = name.substring(0, 3).toUpperCase();
+    if (!base_name) {
+      // fallback in case no name provided
+      return "FLV" + Math.random().toString(36).substring(2, 5).toUpperCase();
     }
 
+    let flavorCode = generateId(name, 3);
+    let isUnique = false;
+    let layer = 0;
+
+    while (!isUnique) {
+      const [existing] = await db
+        .select()
+        .from(flavorsTable)
+        .where(eq(flavorsTable.flavor_id, flavorCode));
+
+      if (!existing) {
+        isUnique = true;
+      } else {
+        //if existing, immediately add counter for layered case
+        layer += 1;
+
+        //layered looping to do if the code exists
+        switch (layer) {
+          case 1: {
+            //remove vowels
+            const noVowels = removeVowel(name);
+            flavorCode = generateId(noVowels, 3);
+            break;
+          }
+
+          case 2: {
+            // skip even positions letter
+            const skipped = skipLetterBy(name, 2);
+            flavorCode = generateId(skipped, 3);
+            break;
+          }
+
+          case 3: {
+            //start using 5-letter code
+            const words = name.trim().split(/\s+/);
+            if (words.length > 1) {
+              flavorCode = generateId(name, 5);
+            } else {
+              const stripped = removeVowel(name).slice(0, 5).toUpperCase();
+              flavorCode = stripped || name.slice(0, 5).toUpperCase();
+            }
+            break;
+          }
+
+          default: {
+            //all defense layer exhausted: use math random to generate random char
+            const base = generateId(name, 5).slice(0, 2);
+            const entropy = Math.random()
+              .toString(36)
+              .slice(2, 5)
+              .toUpperCase();
+            flavorCode = `${base}${entropy}`;
+          }
+        }
+      }
+    }
     return flavorCode;
   },
 
@@ -104,7 +162,18 @@ export const flavorService = {
   async createFlavor(input: CreateFlavorInput) {
     const { flavor_name, in_stock, image_url, size_prices } = input;
 
-    const newFlavorId = this.generateFlavorId(flavor_name);
+    const [existingFlavor] = await db
+      .select()
+      .from(flavorsTable)
+      .where(ilike(flavorsTable.flavor_name, flavor_name.trim()));
+
+    if (existingFlavor) {
+      throw new Error(
+        `'${flavor_name}' already exists. Maybe try adding other names if its a similar flavor!`,
+      );
+    }
+
+    const newFlavorId = await this.generateFlavorId(flavor_name);
 
     return await db.transaction(async (tx) => {
       const [newFlavor] = await tx

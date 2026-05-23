@@ -10,8 +10,8 @@ import {
 
 import { generate16DigitID } from "./generateID";
 
-export const flavors = pgTable("flavors", {
-  flavor_id: varchar({ length: 3 }).primaryKey(),
+export const flavorsTable = pgTable("flavors", {
+  flavor_id: varchar({ length: 5 }).primaryKey(),
   flavor_name: varchar({ length: 255 }).notNull(),
   in_stock: boolean().default(true).notNull(),
   image_url: varchar({ length: 512 }),
@@ -19,9 +19,11 @@ export const flavors = pgTable("flavors", {
   updated_at: timestamp(),
 });
 
-export const drink_variants = pgTable("drink_variants", {
+export const variantsTable = pgTable("drink_variants", {
   variant_id: varchar({ length: 8 }).primaryKey(),
-  flavor_id: varchar().references(() => flavors.flavor_id),
+  flavor_id: varchar().references(() => flavorsTable.flavor_id, {
+    onDelete: "cascade",
+  }),
   size: varchar({ length: 50 }).notNull(),
   base_price: numeric({ precision: 10, scale: 2 }).notNull(),
   in_stock: boolean().default(true).notNull(),
@@ -29,9 +31,9 @@ export const drink_variants = pgTable("drink_variants", {
   updated_at: timestamp(),
 });
 
-export const addons = pgTable("addons", {
+export const addonsTable = pgTable("addons", {
   addon_id: varchar({ length: 8 }).primaryKey(),
-  add_on_name: varchar({ length: 255 }).notNull(),
+  addon_name: varchar({ length: 255 }).notNull(),
   in_stock: boolean().default(true).notNull(),
   price: numeric({ precision: 10, scale: 2 }).notNull(),
   image_url: varchar({ length: 512 }),
@@ -39,7 +41,7 @@ export const addons = pgTable("addons", {
   updated_at: timestamp(),
 });
 
-export const orders = pgTable("orders", {
+export const ordersTable = pgTable("orders", {
   order_id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
   queue_no: integer().generatedByDefaultAsIdentity().notNull(),
   customer_name: varchar({ length: 255 }),
@@ -47,51 +49,53 @@ export const orders = pgTable("orders", {
   payment_method: varchar({ enum: ["cash", "cashless"] }),
   created_at: timestamp().defaultNow().notNull(),
 
-  user_id: varchar().references(() => users.user_id),
-  terminal_id: integer().references(() => terminal.terminal_id),
+  user_id: varchar().references(() => usersTable.user_id),
+  terminal_id: integer().references(() => terminalTable.terminal_id),
 });
 
-export const items = pgTable("items", {
+export const itemsTable = pgTable("items", {
   item_id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
-  order_id: integer().references(() => orders.order_id),
-  drink_id: varchar({ length: 255 }).references(
-    () => drink_variants.variant_id,
-  ),
+  order_id: integer().references(() => ordersTable.order_id, {
+    onDelete: "cascade",
+  }),
+  drink_id: varchar({ length: 255 }).references(() => variantsTable.variant_id),
   quantity: integer(),
   sugar_level: varchar({ enum: ["0%", "25%", "50%", "75%", "100%"] }),
   ice_level: varchar({ enum: ["no ice", "less ice", "normal ice"] }),
   sub_price: numeric({ precision: 10, scale: 2 }).notNull(),
 });
 
-export const item_addons = pgTable("item_addons", {
+export const itemAddonsTable = pgTable("item_addons", {
   id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
-  item_id: integer().references(() => items.item_id),
-  addon_id: varchar({ length: 255 }).references(() => addons.addon_id),
+  item_id: integer().references(() => itemsTable.item_id, {
+    onDelete: "cascade",
+  }),
+  addon_id: varchar({ length: 255 }).references(() => addonsTable.addon_id),
   quantity: integer(),
   sub_price: numeric({ precision: 10, scale: 2 }).notNull(),
 });
 
-export const users = pgTable("users", {
+export const usersTable = pgTable("users", {
   user_id: varchar({ length: 16 })
     .primaryKey()
     .$defaultFn(() => generate16DigitID()),
   username: varchar({ length: 255 }),
   password: varchar({ length: 255 }).notNull(),
   account_type: varchar({ enum: ["admin", "manager", "employee"] }),
-  branch_id: integer().references(() => branch.branch_id),
+  branch_id: integer().references(() => branchTable.branch_id),
   created_at: timestamp().defaultNow().notNull(),
   updated_at: timestamp(),
 });
 
-export const terminal = pgTable("terminal", {
+export const terminalTable = pgTable("terminal", {
   terminal_id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
   terminal_name: varchar({ length: 255 }),
-  branch_id: integer().references(() => branch.branch_id),
+  branch_id: integer().references(() => branchTable.branch_id),
   created_at: timestamp().defaultNow().notNull(),
   updated_at: timestamp(),
 });
 
-export const branch = pgTable("branch", {
+export const branchTable = pgTable("branch", {
   branch_id: integer().primaryKey().generatedAlwaysAsIdentity().notNull(),
   store_name: varchar({ length: 255 }),
   created_at: timestamp().defaultNow().notNull(),

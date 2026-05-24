@@ -25,12 +25,12 @@ type CreateFlavorInput = {
 export const flavorService = {
   async fetchFlavors() {
     const rows = await db
-      .select({
+      .select(/*{
         flavor_id: flavorsTable.flavor_id,
         flavor_name: flavorsTable.flavor_name,
         image_url: flavorsTable.image_url,
         in_stock: flavorsTable.in_stock,
-      })
+      }*/)
       .from(flavorsTable);
 
     return rows;

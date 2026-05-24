@@ -4,6 +4,9 @@ import { cors } from "hono/cors";
 import { testConnection } from "#/db/index";
 import { env } from "#/env";
 
+import { flavors } from "#/routes/flavors";
+import { addons } from "#/routes/addons";
+
 const app = new Hono();
 
 app.use(
@@ -13,7 +16,9 @@ app.use(
   }),
 );
 
-const routes = app.get("/", (c) => {
+const routes = app.route("/api", flavors).route("/api", addons);
+
+app.get("/", (c) => {
   return c.text("It's alright.");
 });
 

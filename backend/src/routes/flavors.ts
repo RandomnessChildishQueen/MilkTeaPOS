@@ -35,6 +35,17 @@ export const flavors = new Hono()
     }
   })
 
+  //generate a flavor id
+  .get("/flavor/generate-id", async (c) => {
+    const name = c.req.query("flavor_name");
+    if (!name) return c.json({ error: "Name is required" }, 400);
+
+    // Call your awesome service function!
+    const generatedId = await flavorService.generateFlavorId(name);
+
+    return c.json({ flavor_id: generatedId });
+  })
+
   //add a flavor
   .post("/flavor/add", async (c) => {
     try {

@@ -16,7 +16,7 @@ export const flavorsTable = pgTable("flavors", {
   in_stock: boolean().default(true).notNull(),
   image_url: varchar({ length: 512 }),
   created_at: timestamp().defaultNow().notNull(),
-  updated_at: timestamp(),
+  updated_at: timestamp().defaultNow().notNull(),
 });
 
 export const variantsTable = pgTable("drink_variants", {
@@ -28,7 +28,7 @@ export const variantsTable = pgTable("drink_variants", {
   base_price: numeric({ precision: 10, scale: 2 }).notNull(),
   in_stock: boolean().default(true).notNull(),
   created_at: timestamp().defaultNow().notNull(),
-  updated_at: timestamp(),
+  updated_at: timestamp().defaultNow().notNull(),
 });
 
 export const addonsTable = pgTable("addons", {
@@ -38,7 +38,7 @@ export const addonsTable = pgTable("addons", {
   price: numeric({ precision: 10, scale: 2 }).notNull(),
   image_url: varchar({ length: 512 }),
   created_at: timestamp().defaultNow().notNull(),
-  updated_at: timestamp(),
+  updated_at: timestamp().defaultNow().notNull(),
 });
 
 export const ordersTable = pgTable("orders", {
@@ -48,6 +48,7 @@ export const ordersTable = pgTable("orders", {
   total_price: numeric({ precision: 10, scale: 2 }).notNull(),
   payment_method: varchar({ enum: ["cash", "cashless"] }),
   created_at: timestamp().defaultNow().notNull(),
+  updated_at: timestamp().defaultNow().notNull(),
 
   user_id: varchar().references(() => usersTable.user_id),
   terminal_id: integer().references(() => terminalTable.terminal_id),
@@ -84,7 +85,7 @@ export const usersTable = pgTable("users", {
   account_type: varchar({ enum: ["admin", "manager", "employee"] }),
   branch_id: integer().references(() => branchTable.branch_id),
   created_at: timestamp().defaultNow().notNull(),
-  updated_at: timestamp(),
+  updated_at: timestamp().defaultNow().notNull(),
 });
 
 export const terminalTable = pgTable("terminal", {

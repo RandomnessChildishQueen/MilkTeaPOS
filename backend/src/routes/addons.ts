@@ -7,7 +7,7 @@ import { addonService } from "#/services/addonsServices";
 export const addons = new Hono()
 
   //get all addons
-  .get("/addon", async (c) => {
+  .get("/addon/all", async (c) => {
     const rows = await db.select().from(addonsTable);
 
     return c.json(rows);

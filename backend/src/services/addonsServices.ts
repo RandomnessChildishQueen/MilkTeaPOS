@@ -21,7 +21,7 @@ export const addonService = {
       return "ADD" + Math.random().toString(36).substring(2, 5).toUpperCase();
     }
 
-    let addonCode = generateId(name, 3);
+    let addonCode = generateId(name, 5);
     let isUnique = false;
     let layer = 0;
 
@@ -42,35 +42,35 @@ export const addonService = {
           case 1: {
             //remove vowels
             const noVowels = removeVowel(name);
-            addonCode = generateId(noVowels, 3);
+            addonCode = generateId(noVowels, 5);
             break;
           }
 
           case 2: {
             // skip even positions letter
             const skipped = skipLetterBy(name, 2);
-            addonCode = generateId(skipped, 3);
+            addonCode = generateId(skipped, 5);
             break;
           }
 
           case 3: {
-            //start using 5-letter code
+            //start using 8-letter code
             const words = name.trim().split(/\s+/);
             if (words.length > 1) {
-              addonCode = generateId(name, 5);
+              addonCode = generateId(name, 8);
             } else {
-              const stripped = removeVowel(name).slice(0, 5).toUpperCase();
-              addonCode = stripped || name.slice(0, 5).toUpperCase();
+              const stripped = removeVowel(name).slice(0, 8).toUpperCase();
+              addonCode = stripped || name.slice(0, 8).toUpperCase();
             }
             break;
           }
 
           default: {
             //all defense layer exhausted: use math random to generate random char
-            const base = generateId(name, 5).slice(0, 2);
+            const base = generateId(name, 8).slice(0, 2);
             const entropy = Math.random()
               .toString(36)
-              .slice(2, 5)
+              .slice(2, 8)
               .toUpperCase();
             addonCode = `${base}${entropy}`;
           }
@@ -104,6 +104,7 @@ export const addonService = {
           addon_name: addon_name,
           in_stock: in_stock ?? true,
           image_url: image_url,
+          price: price,
         })
         .returning();
 

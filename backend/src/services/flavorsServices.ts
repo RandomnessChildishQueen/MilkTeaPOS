@@ -16,6 +16,7 @@ type FlavorPriceInput = {
 };
 
 type CreateFlavorInput = {
+  flavor_id: string;
   flavor_name: string;
   in_stock?: boolean;
   image_url: string;
@@ -55,7 +56,7 @@ export const flavorService = {
 
   async fetchSizes() {
     const sizes = await db
-      .selectDistinct({
+      .select({
         size: variantsTable.size,
       })
       .from(variantsTable)
@@ -160,7 +161,7 @@ export const flavorService = {
   },
 
   async createFlavor(input: CreateFlavorInput) {
-    const { flavor_name, in_stock, image_url, size_prices } = input;
+    const { flavor_id, flavor_name, in_stock, image_url, size_prices } = input;
 
     const [existingFlavor] = await db
       .select()
@@ -173,24 +174,18 @@ export const flavorService = {
       );
     }
 
-    const newFlavorId = await this.generateFlavorId(flavor_name);
-
     return await db.transaction(async (tx) => {
       const [newFlavor] = await tx
         .insert(flavorsTable)
         .values({
-          flavor_id: newFlavorId,
+          flavor_id: flavor_id,
           flavor_name: flavor_name,
           in_stock: in_stock ?? true,
           image_url: image_url,
         })
         .returning();
 
-      const createdVariants = await this.addVariant(
-        tx,
-        newFlavorId,
-        size_prices,
-      );
+      const createdVariants = await this.addVariant(tx, flavor_id, size_prices);
 
       return { newFlavor, createdVariants };
     });

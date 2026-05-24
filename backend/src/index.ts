@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { testConnection } from "#/db/index";
@@ -6,17 +7,23 @@ import { env } from "#/env";
 
 import { flavors } from "#/routes/flavors";
 import { addons } from "#/routes/addons";
+import { upload } from "#/routes/upload";
 
 const app = new Hono();
 
-app.use(
-  "/api/*",
-  cors({
-    origin: env.FRONTEND_URL,
-  }),
-);
+app
+  .use(
+    "/api/*",
+    cors({
+      origin: env.FRONTEND_URL,
+    }),
+  )
+  .use("/images/*", serveStatic({ root: "./public" }));
 
-const routes = app.route("/api", flavors).route("/api", addons);
+const routes = app
+  .route("/api", upload)
+  .route("/api", flavors)
+  .route("/api", addons);
 
 app.get("/", (c) => {
   return c.text("It's alright.");

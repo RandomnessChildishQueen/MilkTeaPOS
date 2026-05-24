@@ -23,7 +23,7 @@ const navItems = [
 
 export default function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar className="border-none">
       <SidebarContent>
         <SidebarMenu>
           {navItems.map((item) => {
@@ -32,8 +32,8 @@ export default function AppSidebar() {
               <SidebarMenuItem key={item.name} className="h-25">
                 <SidebarMenuButton asChild className="h-25">
                   <a href={`${item.path}`} className="flex-col">
-                    <Icon style={{ width: "auto", height: "40px" }} />
-                    {item.name}
+                    <Icon style={{ width: "auto", height: "3.5rem" }} />
+                    <p className="text-lg">{item.name}</p>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>

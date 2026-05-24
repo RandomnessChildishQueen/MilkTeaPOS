@@ -94,6 +94,30 @@ export const flavors = new Hono()
     return c.json(result);
   })
 
+  //get flavor variants by flavor id
+  .get("/flavor/:id/variants", async (c) => {
+    const id = c.req.param("id");
+    const variants = await flavorService.fetchVariantsByFlavor(id);
+
+    if (!variants || variants.length === 0) {
+      return c.json({ error: "No variants found for this flavor" }, 404);
+    }
+
+    return c.json(variants);
+  })
+
+  //get prices by flavor id
+  .get("/flavor/:id/prices", async (c) => {
+    const id = c.req.param("id");
+    const prices = await flavorService.fetchFlavorPrices(id);
+
+    if (!prices || prices.length === 0) {
+      return c.json({ error: "No prices found for this flavor" }, 404);
+    }
+
+    return c.json(prices);
+  })
+
   //update a flavor
   .put("/flavor/:id", async (c) => {
     const id = c.req.param("id");

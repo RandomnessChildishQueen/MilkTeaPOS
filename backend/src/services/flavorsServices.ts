@@ -54,6 +54,22 @@ export const flavorService = {
     return variant;
   },
 
+  async fetchVariantsByFlavor(flavor_id: string) {
+    const rows = await db
+      .select()
+      .from(variantsTable)
+      .where(eq(variantsTable.flavor_id, flavor_id));
+    return rows;
+  },
+
+  async fetchFlavorPrices(flavor_id: string) {
+    const rows = await db
+      .select()
+      .from(variantsTable)
+      .where(eq(variantsTable.flavor_id, flavor_id));
+    return rows;
+  },
+
   async fetchSizes() {
     const sizes = await db
       .select({

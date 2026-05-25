@@ -2,17 +2,26 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 
-export default function SortControls() {
+export default function SortControls({
+  onSortChange,
+}: {
+  onSortChange: (
+    nameSort: "asc" | "desc" | null,
+    priceSort: "asc" | "desc" | null,
+  ) => void;
+}) {
   const [nameSort, setNameSort] = useState<"asc" | "desc" | null>(null);
   const [priceSort, setPriceSort] = useState<"asc" | "desc" | null>(null);
 
   const cycleSort = (
     current: "asc" | "desc" | null,
     setSort: (val: "asc" | "desc" | null) => void,
+    other: "asc" | "desc" | null,
+    isName: boolean,
   ) => {
-    if (current === null) setSort("asc");
-    else if (current === "asc") setSort("desc");
-    else setSort(null);
+    const next = current === null ? "asc" : current === "asc" ? "desc" : null;
+    setSort(next);
+    onSortChange(isName ? next : other, isName ? other : next);
   };
 
   return (
@@ -20,7 +29,7 @@ export default function SortControls() {
       <Button
         variant="outline"
         className="h-10 w-1/2 justify-between"
-        onClick={() => cycleSort(nameSort, setNameSort)}
+        onClick={() => cycleSort(nameSort, setNameSort, priceSort, true)}
       >
         Name
         {nameSort === "asc" && <ArrowUp className="ml-2 h-4 w-4" />}
@@ -33,7 +42,7 @@ export default function SortControls() {
       <Button
         variant="outline"
         className="h-10 w-1/2 justify-between"
-        onClick={() => cycleSort(priceSort, setPriceSort)}
+        onClick={() => cycleSort(priceSort, setPriceSort, nameSort, false)}
       >
         Price
         {priceSort === "asc" && <ArrowUp className="ml-2 h-4 w-4" />}

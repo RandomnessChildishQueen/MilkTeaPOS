@@ -37,24 +37,45 @@ type AddOn = InferResponseType<typeof client.api.addon.all.$get>;
 
 function Menu() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [nameSort, setNameSort] = useState<"asc" | "desc" | null>(null);
+  const [priceSort, setPriceSort] = useState<"asc" | "desc" | null>(null);
   return (
     <>
       <Header text="Menu" />
       <div className="p-4 flex-1">
         <div>
-          <SearchLayer onSearch={setSearchQuery} />
+          <SearchLayer
+            onSearch={setSearchQuery}
+            onSortChange={(n, p) => {
+              setNameSort(n);
+              setPriceSort(p);
+            }}
+          />
           <MenuNav />
         </div>
         <div className="flex flex-col gap-y-5">
           <CupSizes />
-          <AvailableFlavors searchQuery={searchQuery} />
+          <AvailableFlavors
+            searchQuery={searchQuery}
+            nameSort={nameSort}
+            priceSort={priceSort}
+          />
         </div>
       </div>
     </>
   );
 }
 
-function SearchLayer({ onSearch }: { onSearch: (query: string) => void }) {
+function SearchLayer({
+  onSearch,
+  onSortChange,
+}: {
+  onSearch: (query: string) => void;
+  onSortChange: (
+    nameSort: "asc" | "desc" | null,
+    priceSort: "asc" | "desc" | null,
+  ) => void;
+}) {
   const [query, setQuery] = useState("");
 
   const handleSearch = () => {
@@ -71,7 +92,7 @@ function SearchLayer({ onSearch }: { onSearch: (query: string) => void }) {
           className="w-full h-10"
         />
       </div>
-      <SortControls />
+      <SortControls onSortChange={onSortChange} />
     </div>
   );
 }
@@ -107,8 +128,32 @@ function CupSizes() {
   );
 }
 
-function AvailableFlavors({ searchQuery }: { searchQuery: string }) {
+function AvailableFlavors({
+  searchQuery,
+  nameSort,
+  priceSort,
+}: {
+  searchQuery: string;
+  nameSort: "asc" | "desc" | null;
+  priceSort: "asc" | "desc" | null;
+}) {
   const { flavors, filteredFlavors } = useFlavors(searchQuery);
+
+  const displayFlavors = [...(searchQuery ? filteredFlavors : flavors)].sort(
+    (a, b) => {
+      if (nameSort) {
+        return nameSort === "asc"
+          ? a.flavor_name.localeCompare(b.flavor_name)
+          : b.flavor_name.localeCompare(a.flavor_name);
+      }
+      if (priceSort) {
+        const aPrice = a.variants[0]?.base_price ?? 0;
+        const bPrice = b.variants[0]?.base_price ?? 0;
+        return priceSort === "asc" ? aPrice - bPrice : bPrice - aPrice;
+      }
+      return 0;
+    },
+  );
 
   return (
     <div className="flex flex-col flex-wrap gap-2 justify-start">
@@ -116,12 +161,12 @@ function AvailableFlavors({ searchQuery }: { searchQuery: string }) {
         <h2 className="py-2">Flavors</h2>
         <AddFlavorModal />
       </div>
-      {flavors.length === 0 ? (
+      {displayFlavors.length === 0 ? (
         <div className="flex flex-col justify-center p-8 text-center">
           <p>No flavors available. Start adding flavors!</p>
         </div>
       ) : (
-        (searchQuery ? filteredFlavors : flavors).map((flavor) => (
+        displayFlavors.map((flavor) => (
           <Card
             key={flavor.flavor_id}
             className="flex flex-row justify-between items-center overflow-hidden"

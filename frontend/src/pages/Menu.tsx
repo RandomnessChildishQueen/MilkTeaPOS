@@ -36,28 +36,40 @@ type Flavor = InferResponseType<typeof client.api.flavor.all.$get>;
 type AddOn = InferResponseType<typeof client.api.addon.all.$get>;
 
 function Menu() {
+  const [searchQuery, setSearchQuery] = useState("");
   return (
     <>
       <Header text="Menu" />
       <div className="p-4 flex-1">
         <div>
-          <SearchLayer />
+          <SearchLayer onSearch={setSearchQuery} />
           <MenuNav />
         </div>
         <div className="flex flex-col gap-y-5">
           <CupSizes />
-          <AvailableFlavors />
+          <AvailableFlavors searchQuery={searchQuery} />
         </div>
       </div>
     </>
   );
 }
 
-function SearchLayer() {
+function SearchLayer({ onSearch }: { onSearch: (query: string) => void }) {
+  const [query, setQuery] = useState("");
+
+  const handleSearch = () => {
+    onSearch(query);
+  };
+
   return (
     <div className="flex flex-row justify-start mb-5">
       <div className="w-4/5 h-9">
-        <Searchbar className="w-full h-10" />
+        <Searchbar
+          value={query}
+          onChange={setQuery}
+          onSearch={handleSearch}
+          className="w-full h-10"
+        />
       </div>
       <SortControls />
     </div>
@@ -95,8 +107,8 @@ function CupSizes() {
   );
 }
 
-function AvailableFlavors() {
-  const { flavors } = useFlavors();
+function AvailableFlavors({ searchQuery }: { searchQuery: string }) {
+  const { flavors, filteredFlavors } = useFlavors(searchQuery);
 
   return (
     <div className="flex flex-col flex-wrap gap-2 justify-start">
@@ -109,7 +121,7 @@ function AvailableFlavors() {
           <p>No flavors available. Start adding flavors!</p>
         </div>
       ) : (
-        flavors.map((flavor) => (
+        (searchQuery ? filteredFlavors : flavors).map((flavor) => (
           <Card
             key={flavor.flavor_id}
             className="flex flex-row justify-between items-center overflow-hidden"

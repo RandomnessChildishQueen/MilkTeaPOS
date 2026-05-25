@@ -22,7 +22,18 @@ export const flavors = new Hono()
       .select()
       .from(flavorsTable)
       .where(ilike(flavorsTable.flavor_name, `%${query}%`));
-    return c.json(results);
+
+    const withVariants = await Promise.all(
+      results.map(async (flavor) => {
+        const variants = await db
+          .select()
+          .from(variantsTable)
+          .where(eq(variantsTable.flavor_id, flavor.flavor_id));
+        return { ...flavor, variants };
+      }),
+    );
+
+    return c.json(withVariants);
   })
 
   //get cup sizes

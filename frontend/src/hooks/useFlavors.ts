@@ -19,11 +19,24 @@ type CreateFlavorInput = {
   size_prices: SizePriceInput[];
 };
 
-export function useFlavors() {
+export function useFlavors(searchQuery: string = "") {
   const API_URL = import.meta.env.VITE_API_URL;
   const [flavors, setFlavors] = useState<Flavor>([]);
   const [cupSizes, setCupSizes] = useState<string[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [filteredFlavors, setFilteredFlavors] = useState([]);
+
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      const res = await client.api.flavor.search.$get({
+        query: { name: searchQuery },
+      });
+      const data = await res.json();
+      setFilteredFlavors(data);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
 
   useEffect(() => {
     async function fetchCupSizes() {
@@ -173,5 +186,7 @@ export function useFlavors() {
     handleAddFlavor,
     generateFlavorId,
     errors,
+    filteredFlavors,
+    setFilteredFlavors,
   };
 }

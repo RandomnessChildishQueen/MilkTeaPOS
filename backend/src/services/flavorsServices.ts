@@ -4,6 +4,7 @@ import { eq, like, ilike, asc, min } from "drizzle-orm";
 import { generateId } from "#/utils/generateId";
 import { removeVowel } from "#/utils/vowelRemover";
 import { skipLetterBy } from "#/utils/skipLetters";
+import { size } from "zod";
 
 type SizePriceInput = {
   size: string;
@@ -25,16 +26,17 @@ type CreateFlavorInput = {
 
 export const flavorService = {
   async fetchFlavors() {
-    const rows = await db
-      .select(/*{
-        flavor_id: flavorsTable.flavor_id,
-        flavor_name: flavorsTable.flavor_name,
-        image_url: flavorsTable.image_url,
-        in_stock: flavorsTable.in_stock,
-      }*/)
-      .from(flavorsTable);
-
-    return rows;
+    const result = await db.query.flavors.findMany({
+      with: {
+        variants: {
+          columns: {
+            size: true,
+            base_price: true,
+          },
+        },
+      },
+    });
+    return result;
   },
 
   async fetchFlavorNames() {
@@ -64,7 +66,10 @@ export const flavorService = {
 
   async fetchFlavorPrices(flavor_id: string) {
     const rows = await db
-      .select()
+      .select({
+        price: variantsTable.base_price,
+        size: variantsTable.size,
+      })
       .from(variantsTable)
       .where(eq(variantsTable.flavor_id, flavor_id));
     return rows;

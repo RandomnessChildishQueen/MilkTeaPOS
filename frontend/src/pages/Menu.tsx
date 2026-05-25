@@ -100,7 +100,7 @@ function AvailableFlavors() {
 
   return (
     <div className="flex flex-col flex-wrap gap-2 justify-start">
-      <div className="flex flex-row gap-2 items-center justify-between">
+      <div className="flex flex-row flex-wrap gap-2 items-center justify-between">
         <h2 className="py-2">Flavors</h2>
         <AddFlavorModal />
       </div>
@@ -112,9 +112,9 @@ function AvailableFlavors() {
         flavors.map((flavor) => (
           <Card
             key={flavor.flavor_id}
-            className="flex flex-row justify-between items-center"
+            className="flex flex-row justify-between items-center overflow-hidden"
           >
-            <CardHeader className="flex flex-row items-center justify-start space-y-0 gap-4 p-4">
+            <CardHeader className="flex flex-1 flex-row items-center justify-start space-y-0 gap-4 p-4 bg-card z-10">
               <img
                 src={flavor.image_url || ""}
                 alt={flavor.flavor_name}
@@ -126,10 +126,17 @@ function AvailableFlavors() {
               />
               <CardTitle>{flavor.flavor_name}</CardTitle>
             </CardHeader>
-            <CardContent className="flex items-baseline">
+            <CardContent className="flex flex-3 flex-row items-baseline gap-10 justify-around">
+              <div className="flex flex-col items-start gap-2 text-start">
+                {flavor.variants.map((variant) => (
+                  <p key={variant.size}>
+                    Price ({variant.size}): {variant.base_price}
+                  </p>
+                ))}
+              </div>
               <p>Stock: {flavor.in_stock ? "In Stock" : "Out of Stock"}</p>
             </CardContent>
-            <CardFooter className="border-none gap-2">
+            <CardFooter className="flex flex-1 flex-row border-none gap-2">
               <button className="bg-secondary p-2 rounded-md" type="button">
                 Edit
               </button>

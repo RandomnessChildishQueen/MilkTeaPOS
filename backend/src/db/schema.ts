@@ -8,6 +8,7 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+import { relations } from "drizzle-orm";
 import { generate16DigitID } from "./generateID";
 
 export const flavorsTable = pgTable("flavors", {
@@ -102,3 +103,14 @@ export const branchTable = pgTable("branch", {
   created_at: timestamp().defaultNow().notNull(),
   updated_at: timestamp(),
 });
+
+export const flavorsRelations = relations(flavorsTable, ({ many }) => ({
+  variants: many(variantsTable),
+}));
+
+export const variantsRelations = relations(variantsTable, ({ one }) => ({
+  flavor: one(flavorsTable, {
+    fields: [variantsTable.flavor_id],
+    references: [flavorsTable.flavor_id],
+  }),
+}));

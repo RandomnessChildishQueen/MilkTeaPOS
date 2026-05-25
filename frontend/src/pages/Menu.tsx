@@ -29,12 +29,6 @@ import ImageUpload from "@/components/ImageUpload.tsx";
 
 import { useFlavors } from "@/hooks/useFlavors.ts";
 
-import type { InferResponseType } from "hono/client";
-
-type Flavor = InferResponseType<typeof client.api.flavor.all.$get>;
-
-type AddOn = InferResponseType<typeof client.api.addon.all.$get>;
-
 function Menu() {
   const [searchQuery, setSearchQuery] = useState("");
   const [nameSort, setNameSort] = useState<"asc" | "desc" | null>(null);

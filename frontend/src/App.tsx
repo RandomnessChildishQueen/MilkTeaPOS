@@ -3,6 +3,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import AppLayout from "@/layouts/AppLayout.tsx";
+import UnderConstruction from "./pages/UnderConstruction.tsx";
 import Menu from "./pages/Menu.tsx";
 
 function App() {
@@ -10,12 +11,18 @@ function App() {
     <BrowserRouter>
       <AppLayout>
         <Routes>
-          <Route path="/" />
-          <Route path="/sales" />
-          <Route path="/order" />
+          <Route path="/" element={<UnderConstruction page="Dashboard" />} />
+          <Route path="/sales" element={<UnderConstruction page="Sales" />} />
+          <Route path="/order" element={<UnderConstruction page="Order" />} />
           <Route path="/menu" element={<Menu />} />
-          <Route path="/receipts" />
-          <Route path="/account" />
+          <Route
+            path="/receipts"
+            element={<UnderConstruction page="Receipts" />}
+          />
+          <Route
+            path="/account"
+            element={<UnderConstruction page="Account" />}
+          />
         </Routes>
       </AppLayout>
     </BrowserRouter>

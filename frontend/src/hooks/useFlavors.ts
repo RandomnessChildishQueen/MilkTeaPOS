@@ -32,8 +32,15 @@ export function useFlavors(searchQuery: string = "") {
         query: { name: searchQuery },
       });
       const data = await res.json();
-      setFilteredFlavors(data);
-    }, 300); // 300ms debounce
+      const normalized = data.map((f) => ({
+        ...f,
+        image_url: f.image_url?.startsWith("/")
+          ? `${API_URL}${f.image_url}`
+          : f.image_url,
+      }));
+
+      setFilteredFlavors(normalized);
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [searchQuery]);

@@ -178,6 +178,35 @@ export function useFlavors(searchQuery: string = "") {
     }
   };
 
+  const toggleStock = async (flavor_id: string) => {
+    const response = await client.api.flavor[":id"].stock.$patch({
+      param: { id: flavor_id },
+    });
+    if (!response.ok) {
+      alert("Failed to toggle stock");
+      return;
+    }
+    setFlavors((prev) =>
+      prev.map((f) =>
+        f.flavor_id === flavor_id ? { ...f, in_stock: !f.in_stock } : f,
+      ),
+    );
+  };
+
+  const deleteFlavor = async (flavor_id: string) => {
+    if (!confirm("Are you sure you want to delete this flavor?")) return;
+    const response = await client.api.flavor[":id"].$delete({
+      param: { id: flavor_id },
+    });
+    if (!response.ok) {
+      alert("Failed to delete flavor");
+      return;
+    }
+    const message = await response.json();
+    alert(message.message);
+    setFlavors((prev) => prev.filter((f) => f.flavor_id !== flavor_id));
+  };
+
   return {
     flavors,
     cupSizes,
@@ -188,5 +217,7 @@ export function useFlavors(searchQuery: string = "") {
     errors,
     filteredFlavors,
     setFilteredFlavors,
+    toggleStock,
+    deleteFlavor,
   };
 }

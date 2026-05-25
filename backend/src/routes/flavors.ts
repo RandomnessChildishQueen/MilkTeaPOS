@@ -254,6 +254,6 @@ export const flavors = new Hono()
 
     return c.json({
       success: true,
-      message: `Deleted flavor with id ${deletedFlavor}`,
+      message: `Deleted flavor with id ${deletedFlavor.flavor_id}`,
     });
   });

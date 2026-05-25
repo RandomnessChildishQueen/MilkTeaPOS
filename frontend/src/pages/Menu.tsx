@@ -131,7 +131,8 @@ function AvailableFlavors({
   nameSort: "asc" | "desc" | null;
   priceSort: "asc" | "desc" | null;
 }) {
-  const { flavors, filteredFlavors } = useFlavors(searchQuery);
+  const { flavors, filteredFlavors, toggleStock, deleteFlavor } =
+    useFlavors(searchQuery);
 
   const displayFlavors = [...(searchQuery ? filteredFlavors : flavors)].sort(
     (a, b) => {
@@ -191,12 +192,17 @@ function AvailableFlavors({
               <button className="bg-secondary p-2 rounded-md" type="button">
                 Edit
               </button>
-              <button className="bg-secondary p-2 rounded-md" type="button">
+              <button
+                className="bg-secondary p-2 rounded-md"
+                type="button"
+                onClick={() => toggleStock(flavor.flavor_id)}
+              >
                 {flavor.in_stock ? "Unavailable" : "Available"}
               </button>
               <button
                 className="bg-danger p-2 rounded-md text-primary-foreground"
                 type="button"
+                onClick={() => deleteFlavor(flavor.flavor_id)}
               >
                 Delete
               </button>
